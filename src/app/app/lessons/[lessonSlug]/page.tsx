@@ -1,0 +1,77 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { prisma } from "@/lib/db";
+
+type LessonPageProps = {
+  params: Promise<{
+    lessonSlug: string;
+  }>;
+};
+
+export default async function LessonPage({ params }: LessonPageProps) {
+  const { lessonSlug } = await params;
+  const lesson = await prisma.lesson.findUnique({
+    where: { slug: lessonSlug },
+    include: {
+      module: {
+        include: {
+          course: true,
+        },
+      },
+      flashcards: {
+        orderBy: { position: "asc" },
+      },
+    },
+  });
+
+  if (!lesson) {
+    notFound();
+  }
+
+  return (
+    <main className="relative min-h-screen overflow-hidden px-6 py-12">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(14,116,144,0.18),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(251,191,36,0.2),_transparent_50%)]" />
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col gap-8">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-slate-600 animate-[fade-in_0.6s_ease-out]">
+          <Link
+            href={`/app/courses/${lesson.module.course.slug}`}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:text-slate-900"
+          >
+            <span aria-hidden="true">{"<-"}</span>
+            Back to course
+          </Link>
+          <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 shadow-sm">
+            Module {lesson.module.position || 1}
+          </div>
+        </div>
+
+        <header className="space-y-3 animate-[fade-in_0.6s_ease-out]">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Lesson
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900">
+            {lesson.title}
+          </h1>
+          {lesson.summary ? (
+            <p className="text-sm text-slate-600">{lesson.summary}</p>
+          ) : null}
+        </header>
+
+        <article className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-700 whitespace-pre-wrap animate-[rise-in_0.6s_ease-out_forwards] opacity-0">
+          {lesson.contentMd ?? "Lesson content is coming soon."}
+        </article>
+
+        <section className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-600 animate-[rise-in_0.6s_ease-out_forwards] opacity-0" style={{ animationDelay: "120ms" }}>
+          <h2 className="text-base font-semibold text-slate-900">
+            Flashcards
+          </h2>
+          <p className="mt-2">
+            {lesson.flashcards.length} card
+            {lesson.flashcards.length === 1 ? "" : "s"} available for review.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}

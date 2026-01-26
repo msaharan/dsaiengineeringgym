@@ -113,18 +113,26 @@ export default async function CoursePage({ params }: CoursePageProps) {
                 {module.lessons.length > 0 ? (
                   <ul className="mt-5 space-y-3 text-sm text-slate-600">
                     {module.lessons.map((lesson) => (
-                      <li key={lesson.id} className="flex gap-3">
-                        <span className="mt-2 h-2 w-2 rounded-full bg-slate-300" />
-                        <div>
-                          <p className="font-medium text-slate-800">
-                            {lesson.title}
-                          </p>
-                          {lesson.summary ? (
-                            <p className="mt-1 text-xs text-slate-500">
-                              {lesson.summary}
+                      <li key={lesson.id}>
+                        <Link
+                          href={`/app/lessons/${lesson.slug}`}
+                          className="group flex gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-slate-200 hover:bg-slate-50"
+                        >
+                          <span className="mt-2 h-2 w-2 rounded-full bg-slate-300" />
+                          <div>
+                            <p className="font-medium text-slate-800 transition group-hover:text-slate-900">
+                              {lesson.title}
                             </p>
-                          ) : null}
-                        </div>
+                            {lesson.summary ? (
+                              <p className="mt-1 text-xs text-slate-500">
+                                {lesson.summary}
+                              </p>
+                            ) : null}
+                            <span className="mt-2 inline-flex text-xs font-semibold text-slate-500 group-hover:text-slate-700">
+                              Open lesson
+                            </span>
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>
