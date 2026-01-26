@@ -7,6 +7,32 @@ import { prisma } from "@/lib/db";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
+  const lastProgress = user?.id
+    ? await prisma.lessonProgress.findFirst({
+        where: { userId: user.id },
+        orderBy: { lastOpenedAt: "desc" },
+        select: {
+          status: true,
+          lastOpenedAt: true,
+          lesson: {
+            select: {
+              title: true,
+              slug: true,
+              module: {
+                select: {
+                  title: true,
+                  course: {
+                    select: {
+                      title: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+    : null;
   const dueCount = user?.id
     ? await prisma.userFlashcardState.count({
         where: {
@@ -38,18 +64,48 @@ export default async function DashboardPage() {
           className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm opacity-0 animate-[rise-in_0.6s_ease-out_forwards]"
           style={{ animationDelay: "0ms" }}
         >
-          <h2 className="text-lg font-semibold text-slate-900">
-            Your learning gym is warming up
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Start with the first course and build a consistent cadence.
-          </p>
-          <Link
-            href="/app/courses"
-            className="mt-5 inline-flex items-center justify-center rounded-md bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-          >
-            Browse courses
-          </Link>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-slate-900">
+              {lastProgress ? "Continue learning" : "Your learning gym is warming up"}
+            </h2>
+            {lastProgress?.status ? (
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                {lastProgress.status === "COMPLETED" ? "Completed" : "In progress"}
+              </span>
+            ) : null}
+          </div>
+          {lastProgress ? (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                Resume{" "}
+                <span className="font-semibold text-slate-700">
+                  {lastProgress.lesson.title}
+                </span>{" "}
+                in {lastProgress.lesson.module.title}.
+              </p>
+              <Link
+                href={`/app/lessons/${lastProgress.lesson.slug}`}
+                className="mt-5 inline-flex items-center justify-center rounded-md bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Continue lesson
+              </Link>
+              <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+                {lastProgress.lesson.module.course.title}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                Start with the first course and build a consistent cadence.
+              </p>
+              <Link
+                href="/app/courses"
+                className="mt-5 inline-flex items-center justify-center rounded-md bg-[color:var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                Browse courses
+              </Link>
+            </>
+          )}
         </div>
 
         <div
