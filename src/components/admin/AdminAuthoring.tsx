@@ -317,8 +317,6 @@ export default function AdminAuthoring({
         </div>
       ) : null}
 
-      <ImageUploader />
-
       <div className="flex flex-wrap gap-2 rounded-full border border-slate-200 bg-white/80 p-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
         {tabs.map((tab) => (
           <button
@@ -993,6 +991,8 @@ export default function AdminAuthoring({
           )}
         </form>
       ) : null}
+
+      <ImageUploader />
     </div>
   );
 }
