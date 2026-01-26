@@ -9,6 +9,7 @@ import { isAdminEmail } from "@/lib/admin";
 type AdminPageProps = {
   searchParams?: Promise<{
     created?: string;
+    updated?: string;
     error?: string;
   }>;
 };
@@ -18,6 +19,13 @@ const createdMessages: Record<string, string> = {
   module: "Module created.",
   lesson: "Lesson created.",
   flashcard: "Flashcard created.",
+};
+
+const updatedMessages: Record<string, string> = {
+  course: "Course updated.",
+  module: "Module updated.",
+  lesson: "Lesson updated.",
+  flashcard: "Flashcard updated.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -58,6 +66,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         include: {
           lessons: {
             orderBy: { position: "asc" },
+            include: {
+              flashcards: {
+                orderBy: { position: "asc" },
+              },
+            },
           },
         },
       },
@@ -67,6 +80,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const resolvedParams = searchParams ? await searchParams : undefined;
   const createdMessage = resolvedParams?.created
     ? createdMessages[resolvedParams.created]
+    : null;
+  const updatedMessage = resolvedParams?.updated
+    ? updatedMessages[resolvedParams.updated]
     : null;
   const errorMessage = resolvedParams?.error
     ? errorMessages[resolvedParams.error]
@@ -92,6 +108,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <AdminAuthoring
           courses={courses}
           createdMessage={createdMessage}
+          updatedMessage={updatedMessage}
           errorMessage={errorMessage}
         />
       </div>
