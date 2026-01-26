@@ -99,3 +99,29 @@ pnpm db:migrate
 pnpm db:studio
 pnpm db:seed
 ```
+
+---
+
+## Backups (DB + uploads)
+
+Local backups are created by `scripts/backup-db.sh`. Each backup is a single
+`.tar.gz` file that contains:
+- `db.sql` (database dump)
+- `uploads/` (images from `public/uploads`)
+
+Default backup location:
+`/Users/msaharan/Library/Mobile Documents/com~apple~CloudDocs/dsaie-backups`
+
+### Run a manual backup
+```bash
+scripts/backup-db.sh
+```
+
+### Restore from a backup
+```bash
+scripts/restore-backup.sh /path/to/dsaie_YYYYMMDD_HHMMSS.tar.gz
+```
+
+### Notes
+- Set `POSTGRES_CONTAINER` in `.env` if you use Docker.
+- Set `UPLOADS_DIR` if you want a custom uploads path.

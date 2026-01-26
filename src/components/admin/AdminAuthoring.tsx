@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import ClientMarkdown from "@/components/content/ClientMarkdown";
+import ImageUploader from "@/components/admin/ImageUploader";
 import {
   createCourse,
   createFlashcard,
@@ -315,6 +316,8 @@ export default function AdminAuthoring({
           {errorMessage}
         </div>
       ) : null}
+
+      <ImageUploader />
 
       <div className="flex flex-wrap gap-2 rounded-full border border-slate-200 bg-white/80 p-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
         {tabs.map((tab) => (

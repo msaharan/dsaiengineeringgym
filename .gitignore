@@ -5,6 +5,9 @@ node_modules
 .next
 out
 
+# uploads
+public/uploads
+
 # env
 .env
 .env.local

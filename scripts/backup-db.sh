@@ -21,26 +21,39 @@ fi
 BACKUP_ROOT="${BACKUP_ROOT:-/Users/msaharan/Library/Mobile Documents/com~apple~CloudDocs/dsaie-backups}"
 KEEP_COUNT="${KEEP_COUNT:-30}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-}"
+UPLOADS_DIR="${UPLOADS_DIR:-$REPO_DIR/public/uploads}"
 
 mkdir -p "$BACKUP_ROOT"
 
 STAMP="$(date +%Y%m%d_%H%M%S)"
-BACKUP_FILE="$BACKUP_ROOT/dsaie_${STAMP}.sql.gz"
+BACKUP_FILE="$BACKUP_ROOT/dsaie_${STAMP}.tar.gz"
 
 DB_URL="${DATABASE_URL%%\?*}"
+TMP_DIR="$(mktemp -d)"
+DB_DUMP_PATH="$TMP_DIR/db.sql"
+UPLOADS_TARGET="$TMP_DIR/uploads"
 
 if [[ -n "$POSTGRES_CONTAINER" ]]; then
-  docker exec -t "$POSTGRES_CONTAINER" pg_dump --dbname="$DB_URL" | gzip > "$BACKUP_FILE"
+  docker exec -t "$POSTGRES_CONTAINER" pg_dump --dbname="$DB_URL" > "$DB_DUMP_PATH"
 else
   if ! command -v pg_dump >/dev/null 2>&1; then
     echo "pg_dump not found. Install PostgreSQL client tools or set POSTGRES_CONTAINER." >&2
     exit 1
   fi
-  pg_dump --dbname="$DB_URL" | gzip > "$BACKUP_FILE"
+  pg_dump --dbname="$DB_URL" > "$DB_DUMP_PATH"
 fi
 
-if ls "$BACKUP_ROOT"/*.sql.gz >/dev/null 2>&1; then
-  ls -1t "$BACKUP_ROOT"/*.sql.gz | tail -n +"$((KEEP_COUNT + 1))" | while read -r file; do
+mkdir -p "$UPLOADS_TARGET"
+if [[ -d "$UPLOADS_DIR" ]]; then
+  cp -R "$UPLOADS_DIR"/. "$UPLOADS_TARGET" 2>/dev/null || true
+fi
+
+tar -czf "$BACKUP_FILE" -C "$TMP_DIR" .
+
+rm -rf "$TMP_DIR"
+
+if ls "$BACKUP_ROOT"/*.tar.gz >/dev/null 2>&1; then
+  ls -1t "$BACKUP_ROOT"/*.tar.gz | tail -n +"$((KEEP_COUNT + 1))" | while read -r file; do
     rm -f "$file"
   done
 fi
