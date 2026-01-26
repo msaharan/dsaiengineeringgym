@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 import ClientMarkdown from "@/components/content/ClientMarkdown";
+import { completeLesson } from "@/app/app/lessons/actions";
 
 type LessonFlashcard = {
   id: string;
@@ -11,16 +13,21 @@ type LessonFlashcard = {
 };
 
 type LessonFlashcardReviewProps = {
+  lessonId: string;
   flashcards: LessonFlashcard[];
 };
 
 export default function LessonFlashcardReview({
+  lessonId,
   flashcards,
 }: LessonFlashcardReviewProps) {
+  const router = useRouter();
   const [started, setStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const total = flashcards.length;
   const card = flashcards[currentIndex];
@@ -58,6 +65,7 @@ export default function LessonFlashcardReview({
             setCurrentIndex(0);
             setShowBack(false);
             setCompleted(false);
+            setError(null);
           }}
         >
           Review again
@@ -85,6 +93,7 @@ export default function LessonFlashcardReview({
           type="button"
           className="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
           onClick={() => setShowBack((value) => !value)}
+          disabled={isPending}
         >
           {showBack ? "Show question" : "Show answer"}
         </button>
@@ -94,15 +103,29 @@ export default function LessonFlashcardReview({
           onClick={() => {
             if (currentIndex + 1 >= total) {
               setCompleted(true);
+              startTransition(async () => {
+                try {
+                  await completeLesson(lessonId);
+                  router.refresh();
+                } catch {
+                  setError("We could not mark this lesson complete yet.");
+                }
+              });
             } else {
               setCurrentIndex((value) => value + 1);
               setShowBack(false);
             }
           }}
+          disabled={isPending}
         >
           {currentIndex + 1 >= total ? "Finish review" : "Next card"}
         </button>
       </div>
+      {error ? (
+        <p className="text-sm text-rose-600" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

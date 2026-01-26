@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 type CoursePageProps = {
@@ -11,6 +13,8 @@ type CoursePageProps = {
 
 export default async function CoursePage({ params }: CoursePageProps) {
   const { courseSlug } = await params;
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
     include: {
@@ -36,6 +40,30 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
   if (!course) {
     notFound();
+  }
+
+  const lessonIds = course.modules.flatMap((module) =>
+    module.lessons.map((lesson) => lesson.id),
+  );
+  const progressByLesson = new Map<string, "IN_PROGRESS" | "COMPLETED">();
+
+  if (userId && lessonIds.length > 0) {
+    const progress = await prisma.lessonProgress.findMany({
+      where: {
+        userId,
+        lessonId: { in: lessonIds },
+      },
+      select: {
+        lessonId: true,
+        status: true,
+      },
+    });
+
+    progress.forEach((entry) => {
+      if (entry.status === "IN_PROGRESS" || entry.status === "COMPLETED") {
+        progressByLesson.set(entry.lessonId, entry.status);
+      }
+    });
   }
 
   const totalLessons = course.modules.reduce(
@@ -120,9 +148,18 @@ export default async function CoursePage({ params }: CoursePageProps) {
                         >
                           <span className="mt-2 h-2 w-2 rounded-full bg-slate-300" />
                           <div>
-                            <p className="font-medium text-slate-800 transition group-hover:text-slate-900">
-                              {lesson.title}
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-slate-800 transition group-hover:text-slate-900">
+                                {lesson.title}
+                              </p>
+                              {progressByLesson.has(lesson.id) ? (
+                                <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                  {progressByLesson.get(lesson.id) === "COMPLETED"
+                                    ? "Completed"
+                                    : "In progress"}
+                                </span>
+                              ) : null}
+                            </div>
                             {lesson.summary ? (
                               <p className="mt-1 text-xs text-slate-500">
                                 {lesson.summary}

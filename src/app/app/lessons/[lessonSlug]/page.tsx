@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 
 import Markdown from "@/components/content/Markdown";
 import LessonFlashcardReview from "@/components/flashcards/LessonFlashcardReview";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 type LessonPageProps = {
@@ -31,6 +33,53 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound();
   }
 
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  let lessonStatus: "IN_PROGRESS" | "COMPLETED" | null = null;
+
+  if (userId) {
+    const now = new Date();
+    const existingProgress = await prisma.lessonProgress.findUnique({
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId: lesson.id,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!existingProgress) {
+      await prisma.lessonProgress.create({
+        data: {
+          userId,
+          lessonId: lesson.id,
+          status: "IN_PROGRESS",
+          startedAt: now,
+          lastOpenedAt: now,
+        },
+      });
+      lessonStatus = "IN_PROGRESS";
+    } else {
+      await prisma.lessonProgress.update({
+        where: { id: existingProgress.id },
+        data: {
+          lastOpenedAt: now,
+          status:
+            existingProgress.status === "COMPLETED"
+              ? "COMPLETED"
+              : "IN_PROGRESS",
+        },
+      });
+      lessonStatus =
+        existingProgress.status === "COMPLETED" ? "COMPLETED" : "IN_PROGRESS";
+    }
+  }
+
   const lessonContent = lesson.contentMd?.trim();
 
   return (
@@ -51,9 +100,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
         </div>
 
         <header className="space-y-3 animate-[fade-in_0.6s_ease-out]">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-            Lesson
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              Lesson
+            </p>
+            {lessonStatus ? (
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                {lessonStatus === "COMPLETED" ? "Completed" : "In progress"}
+              </span>
+            ) : null}
+          </div>
           <h1 className="text-3xl font-semibold text-slate-900">
             {lesson.title}
           </h1>
@@ -86,7 +142,10 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <p className="mt-2 text-sm text-slate-600">
             Flip through the cards below to reinforce this lesson.
           </p>
-          <LessonFlashcardReview flashcards={lesson.flashcards} />
+          <LessonFlashcardReview
+            lessonId={lesson.id}
+            flashcards={lesson.flashcards}
+          />
         </section>
       </div>
     </main>

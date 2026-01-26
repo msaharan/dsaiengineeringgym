@@ -16,6 +16,7 @@ model User {
   sessions      Session[]
   flashcardStates UserFlashcardState[]
   reviewLogs    ReviewLog[]
+  lessonProgress LessonProgress[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -63,6 +64,12 @@ enum ReviewRating {
   EASY
 }
 
+enum LessonStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model Course {
   id          String   @id @default(cuid())
   title       String
@@ -102,6 +109,7 @@ model Lesson {
   updatedAt DateTime   @updatedAt
   module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   flashcards Flashcard[]
+  progress  LessonProgress[]
 
   @@index([moduleId, position])
 }
@@ -154,4 +162,22 @@ model ReviewLog {
   flashcard Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
 
   @@index([userId, reviewedAt])
+}
+
+model LessonProgress {
+  id           String       @id @default(cuid())
+  userId       String
+  lessonId     String
+  status       LessonStatus @default(IN_PROGRESS)
+  startedAt    DateTime     @default(now())
+  lastOpenedAt DateTime     @default(now())
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, lastOpenedAt])
 }
