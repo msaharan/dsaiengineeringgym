@@ -1,0 +1,20 @@
+You are working in the DSAIEngineeringGym repo.
+
+High-level goal:
+- Build a Duolingo-like learning gym for DS/ML/AI engineering.
+- Auth-gated content, flashcards, spaced repetition, progress tracking.
+- Deploy on Vercel.
+
+Hard constraints:
+- Use Next.js App Router + TypeScript.
+- Use Prisma + Postgres for persistence.
+- Follow AGENTS.md milestones and definitions of done.
+- Avoid `any` and avoid unnecessary dependencies.
+- Prefer server components and server actions; keep client components minimal.
+- Ensure accessibility and good UX.
+- Never commit secrets; update .env.example instead.
+
+Workflow:
+- Make small, incremental changes.
+- After changes: ensure `pnpm lint` and `pnpm build` succeed (or explain failures).
+- Update docs when behavior changes.

@@ -1,9 +1,101 @@
 # DSAIEngineeringGym
 
-This repository contains the code for the website DSAIEngineering.com. The website DSAIENgineering.com is a platform for learning about data science, machine learning, and artificial intelligence from the engineering perspective, meaning that the content is supposed to be practical, hands-on, and real-world applicable targeted to professionals practitioners.
+DSAIEngineeringGym is the codebase for **DSAIEngineering.com** — a “Duolingo-style gym” for **data science, machine learning, and AI engineering** practitioners.
 
-On this website, the users are required to sign up to access the content. Upon signup, the users can access the content on data science, machine learning, and artificial intelligence in such a way that the platform can be considered as a gym for them. Here, they can do their mental workout by doing exercises on these topics. The exercises include flash cards to help them remember the key concepts in their field. Their performance is tracked and saved within their personal account.
+The goal: make practical, hands-on learning feel like a workout:
+- short sessions
+- drills (flashcards + quizzes later)
+- spaced repetition
+- progress tracking per user
 
-In a way, this platform can be considered as a Duolingo for data science, machine learning, and artificial intelligence practitioners. 
+This repository is designed to be built by an AI coding agent (Codex) inside Cursor.  
+See **AGENTS.md** for implementation rules and milestones.
 
-This repository contains all the code for the website. The website will be deployed via vercel.
+---
+
+## Product concept
+
+Users must **sign up / sign in** to access content.
+
+Inside the app:
+- Users choose a track (e.g., *ML Systems*, *LLM Engineering*, *Practical Statistics*, *Data Engineering for ML*)
+- Lessons are practical and “engineering-first”
+- Exercises emphasize recall and application:
+  - Flashcards (MVP)
+  - Multiple-choice & short answers (next)
+  - Code exercises + autograding (future)
+- A spaced repetition engine schedules reviews
+- Progress is tracked per user
+
+---
+
+## MVP definition (what “done” means)
+
+**MVP v0 is complete when:**
+1. A user can sign up/sign in.
+2. Signed-in users can browse a list of Courses → Modules → Lessons.
+3. Lessons render as MDX content.
+4. Lessons have flashcards.
+5. User can start a **Review** session:
+   - sees due cards
+   - answers by self-rating: Again / Hard / Good / Easy
+   - schedule updates are saved
+6. Dashboard shows:
+   - number of cards due today
+   - link to continue the last lesson
+7. Everything is persisted in Postgres.
+
+---
+
+## Recommended stack
+
+- Next.js (App Router) + TypeScript
+- TailwindCSS + shadcn/ui
+- Auth.js / NextAuth for authentication
+- Prisma ORM
+- Postgres (Vercel Postgres recommended)
+- MDX for content
+
+---
+
+## Local development
+
+### Prerequisites
+- Node.js 20+ (recommended)
+- Postgres (local Docker, or Neon/Vercel Postgres)
+- pnpm (recommended) or npm
+
+### Setup
+```bash
+# 1) install deps
+pnpm install
+
+# 2) env
+cp .env.example .env
+
+# 3) generate prisma client
+pnpm db:generate
+
+# 4) migrate (or push) + seed
+pnpm db:migrate
+pnpm db:seed
+
+# 5) run
+pnpm dev
+```
+
+---
+
+## Database & Prisma
+
+- Schema: `prisma/schema.prisma`
+- Seed script: `prisma/seed.ts`
+
+Common commands:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+pnpm db:seed
+```
