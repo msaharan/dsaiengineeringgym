@@ -10,8 +10,8 @@ export default function Markdown({ content, className }: MarkdownProps) {
   const classes = className ? `markdown ${className}` : "markdown";
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} className={classes}>
-      {content}
-    </ReactMarkdown>
+    <div className={classes}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    </div>
   );
 }

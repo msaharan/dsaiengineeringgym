@@ -15,8 +15,8 @@ export default function ClientMarkdown({
   const classes = className ? `markdown ${className}` : "markdown";
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} className={classes}>
-      {content}
-    </ReactMarkdown>
+    <div className={classes}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    </div>
   );
 }
