@@ -56,6 +56,7 @@ export default async function ReviewPage() {
         include: {
           lesson: {
             select: {
+              id: true,
               title: true,
               slug: true,
             },
