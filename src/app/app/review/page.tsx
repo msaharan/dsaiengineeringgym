@@ -67,13 +67,39 @@ export default async function ReviewPage() {
     take: REVIEW_LIMIT,
   });
 
+  const lessonIds = Array.from(
+    new Set(dueStates.map((state) => state.flashcard.lesson.id)),
+  );
+  const progressByLesson = new Map<string, "IN_PROGRESS" | "COMPLETED">();
+
+  if (lessonIds.length > 0) {
+    const progress = await prisma.lessonProgress.findMany({
+      where: {
+        userId,
+        lessonId: { in: lessonIds },
+      },
+      select: {
+        lessonId: true,
+        status: true,
+      },
+    });
+
+    progress.forEach((entry) => {
+      if (entry.status === "IN_PROGRESS" || entry.status === "COMPLETED") {
+        progressByLesson.set(entry.lessonId, entry.status);
+      }
+    });
+  }
+
   const queue = dueStates.map((state) => ({
     flashcardId: state.flashcardId,
     frontMd: state.flashcard.frontMd,
     backMd: state.flashcard.backMd,
     lesson: {
+      id: state.flashcard.lesson.id,
       title: state.flashcard.lesson.title,
       slug: state.flashcard.lesson.slug,
+      status: progressByLesson.get(state.flashcard.lesson.id) ?? null,
     },
   }));
 

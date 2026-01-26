@@ -1,19 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 import ClientMarkdown from "@/components/content/ClientMarkdown";
+import { setLessonStatus } from "@/app/app/lessons/actions";
 import { submitReview } from "@/app/app/review/actions";
 import type { ReviewRating } from "@/lib/review";
+
+type LessonProgressStatus = "IN_PROGRESS" | "COMPLETED" | null;
 
 type ReviewQueueItem = {
   flashcardId: string;
   frontMd: string;
   backMd: string;
   lesson: {
+    id: string;
     title: string;
     slug: string;
+    status: LessonProgressStatus;
   };
 };
 
@@ -53,7 +58,24 @@ export default function ReviewSession({ queue }: ReviewSessionProps) {
   const [showBack, setShowBack] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const reviewedLessons = useMemo(() => {
+    const map = new Map<string, ReviewQueueItem["lesson"]>();
+    queue.forEach((item) => {
+      if (!map.has(item.lesson.id)) {
+        map.set(item.lesson.id, item.lesson);
+      }
+    });
+    return Array.from(map.values());
+  }, [queue]);
+  const [lessonStatuses, setLessonStatuses] = useState(() => {
+    const initial: Record<string, LessonProgressStatus> = {};
+    reviewedLessons.forEach((lesson) => {
+      initial[lesson.id] = lesson.status ?? null;
+    });
+    return initial;
+  });
 
   if (queue.length === 0) {
     return (
@@ -72,6 +94,74 @@ export default function ReviewSession({ queue }: ReviewSessionProps) {
         <p className="mt-2 text-sm text-slate-600">
           You reviewed {queue.length} card{queue.length === 1 ? "" : "s"}.
         </p>
+        {reviewedLessons.length > 0 ? (
+          <div className="mt-6 space-y-4 text-left">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              Lessons reviewed
+            </p>
+            <div className="space-y-3">
+              {reviewedLessons.map((lesson) => {
+                const status = lessonStatuses[lesson.id] ?? null;
+                return (
+                  <div
+                    key={lesson.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {lesson.title}
+                      </p>
+                      <Link
+                        href={`/app/lessons/${lesson.slug}`}
+                        className="text-xs font-semibold text-slate-500 transition hover:text-slate-700"
+                      >
+                        Open lesson
+                      </Link>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        {status === "COMPLETED" ? "Completed" : "In progress"}
+                      </span>
+                      {status !== "COMPLETED" ? (
+                        <button
+                          type="button"
+                          className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() => {
+                            setStatusError(null);
+                            startTransition(async () => {
+                              try {
+                                await setLessonStatus(
+                                  lesson.id,
+                                  "COMPLETED",
+                                );
+                                setLessonStatuses((prev) => ({
+                                  ...prev,
+                                  [lesson.id]: "COMPLETED",
+                                }));
+                              } catch {
+                                setStatusError(
+                                  "We could not update lesson status yet.",
+                                );
+                              }
+                            });
+                          }}
+                          disabled={isPending}
+                        >
+                          Mark complete
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {statusError ? (
+              <p className="text-sm text-rose-600" role="alert">
+                {statusError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button
             type="button"

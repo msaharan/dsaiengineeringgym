@@ -42,6 +42,25 @@ export default async function DashboardPage() {
         },
       })
     : 0;
+  const startedLessons = user?.id
+    ? await prisma.lessonProgress.count({
+        where: {
+          userId: user.id,
+        },
+      })
+    : 0;
+  const completedLessons = user?.id
+    ? await prisma.lessonProgress.count({
+        where: {
+          userId: user.id,
+          status: "COMPLETED",
+        },
+      })
+    : 0;
+  const progressPercent =
+    startedLessons === 0
+      ? 0
+      : Math.round((completedLessons / startedLessons) * 100);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
@@ -124,6 +143,28 @@ export default async function DashboardPage() {
           >
             Start review
           </Link>
+        </div>
+
+        <div
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm opacity-0 animate-[rise-in_0.6s_ease-out_forwards]"
+          style={{ animationDelay: "280ms" }}
+        >
+          <h2 className="text-lg font-semibold text-slate-900">
+            Progress snapshot
+          </h2>
+          <p className="mt-2 text-sm text-slate-600">
+            {completedLessons} of {startedLessons} lesson
+            {startedLessons === 1 ? "" : "s"} completed.
+          </p>
+          <div className="mt-4 h-2 w-full rounded-full bg-slate-100">
+            <div
+              className="h-2 rounded-full bg-[color:var(--accent)] transition-[width]"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+            {progressPercent}% complete
+          </p>
         </div>
       </section>
     </main>
