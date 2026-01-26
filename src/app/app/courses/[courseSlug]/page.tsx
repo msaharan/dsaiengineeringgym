@@ -4,14 +4,15 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 
 type CoursePageProps = {
-  params: {
+  params: Promise<{
     courseSlug: string;
-  };
+  }>;
 };
 
 export default async function CoursePage({ params }: CoursePageProps) {
+  const { courseSlug } = await params;
   const course = await prisma.course.findUnique({
-    where: { slug: params.courseSlug },
+    where: { slug: courseSlug },
     include: {
       modules: {
         orderBy: { position: "asc" },
