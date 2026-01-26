@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import SignOutButton from "@/components/auth/SignOutButton";
 import { authOptions } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 
 export default async function AppLayout({
   children,
@@ -16,6 +17,8 @@ export default async function AppLayout({
   if (!session) {
     redirect("/auth/sign-in");
   }
+
+  const isAdmin = isAdminEmail(session.user?.email ?? null);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -47,6 +50,14 @@ export default async function AppLayout({
               >
                 Review
               </Link>
+              {isAdmin ? (
+                <Link
+                  href="/app/admin"
+                  className="rounded-full px-3 py-1 transition hover:bg-slate-100 hover:text-slate-900"
+                >
+                  Admin
+                </Link>
+              ) : null}
             </nav>
           </div>
           <SignOutButton />
