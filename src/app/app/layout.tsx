@@ -41,6 +41,12 @@ export default async function AppLayout({
               >
                 Courses
               </Link>
+              <Link
+                href="/app/review"
+                className="rounded-full px-3 py-1 transition hover:bg-slate-100 hover:text-slate-900"
+              >
+                Review
+              </Link>
             </nav>
           </div>
           <SignOutButton />

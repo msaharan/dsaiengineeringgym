@@ -14,6 +14,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  flashcardStates UserFlashcardState[]
+  reviewLogs    ReviewLog[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -52,6 +54,13 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum ReviewRating {
+  AGAIN
+  HARD
+  GOOD
+  EASY
 }
 
 model Course {
@@ -106,6 +115,43 @@ model Flashcard {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  states    UserFlashcardState[]
+  reviewLogs ReviewLog[]
 
   @@index([lessonId, position])
+}
+
+model UserFlashcardState {
+  id            String   @id @default(cuid())
+  userId        String
+  flashcardId   String
+  repetitions  Int      @default(0)
+  intervalDays Int      @default(0)
+  easeFactor   Float    @default(2.5)
+  dueAt        DateTime @default(now())
+  lastReviewedAt DateTime?
+  suspended    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+  @@index([userId, dueAt])
+}
+
+model ReviewLog {
+  id          String       @id @default(cuid())
+  userId      String
+  flashcardId String
+  rating      ReviewRating
+  reviewedAt  DateTime     @default(now())
+  intervalDays Int
+  easeFactor  Float
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt])
 }

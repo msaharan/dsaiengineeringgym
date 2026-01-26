@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import Markdown from "@/components/content/Markdown";
+import LessonFlashcardReview from "@/components/flashcards/LessonFlashcardReview";
 import { prisma } from "@/lib/db";
 
 type LessonPageProps = {
@@ -28,6 +30,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
   if (!lesson) {
     notFound();
   }
+
+  const lessonContent = lesson.contentMd?.trim();
 
   return (
     <main className="relative min-h-screen overflow-hidden px-6 py-12">
@@ -58,18 +62,31 @@ export default async function LessonPage({ params }: LessonPageProps) {
           ) : null}
         </header>
 
-        <article className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-700 whitespace-pre-wrap animate-[rise-in_0.6s_ease-out_forwards] opacity-0">
-          {lesson.contentMd ?? "Lesson content is coming soon."}
+        <article className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-700 animate-[rise-in_0.6s_ease-out_forwards] opacity-0">
+          {lessonContent ? (
+            <Markdown content={lessonContent} />
+          ) : (
+            <p>Lesson content is coming soon.</p>
+          )}
         </article>
 
-        <section className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-600 animate-[rise-in_0.6s_ease-out_forwards] opacity-0" style={{ animationDelay: "120ms" }}>
-          <h2 className="text-base font-semibold text-slate-900">
-            Flashcards
-          </h2>
-          <p className="mt-2">
-            {lesson.flashcards.length} card
-            {lesson.flashcards.length === 1 ? "" : "s"} available for review.
+        <section
+          className="rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm text-sm text-slate-600 animate-[rise-in_0.6s_ease-out_forwards] opacity-0"
+          style={{ animationDelay: "120ms" }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-slate-900">
+              Flashcards
+            </h2>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              {lesson.flashcards.length} card
+              {lesson.flashcards.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">
+            Flip through the cards below to reinforce this lesson.
           </p>
+          <LessonFlashcardReview flashcards={lesson.flashcards} />
         </section>
       </div>
     </main>

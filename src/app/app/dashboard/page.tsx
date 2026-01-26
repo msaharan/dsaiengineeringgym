@@ -2,10 +2,20 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
+  const dueCount = user?.id
+    ? await prisma.userFlashcardState.count({
+        where: {
+          userId: user.id,
+          dueAt: { lte: new Date() },
+          suspended: false,
+        },
+      })
+    : 0;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
@@ -47,11 +57,17 @@ export default async function DashboardPage() {
           style={{ animationDelay: "140ms" }}
         >
           <h2 className="text-lg font-semibold text-slate-900">
-            Review flow is next
+            Review your flashcards
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Flashcard reviews and spaced repetition will show up here soon.
+            {dueCount} card{dueCount === 1 ? "" : "s"} due right now.
           </p>
+          <Link
+            href="/app/review"
+            className="mt-5 inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            Start review
+          </Link>
         </div>
       </section>
     </main>
