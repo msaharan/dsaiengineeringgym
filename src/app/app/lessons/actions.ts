@@ -5,7 +5,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-export async function completeLesson(lessonId: string) {
+const lessonStatuses = ["IN_PROGRESS", "COMPLETED"] as const;
+type LessonStatus = (typeof lessonStatuses)[number];
+
+export async function setLessonStatus(
+  lessonId: string,
+  status: LessonStatus,
+) {
+  if (!lessonStatuses.includes(status)) {
+    throw new Error("Invalid lesson status");
+  }
+
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
@@ -25,15 +35,19 @@ export async function completeLesson(lessonId: string) {
     create: {
       userId,
       lessonId,
-      status: "COMPLETED",
+      status,
       startedAt: now,
       lastOpenedAt: now,
-      completedAt: now,
+      completedAt: status === "COMPLETED" ? now : null,
     },
     update: {
-      status: "COMPLETED",
+      status,
       lastOpenedAt: now,
-      completedAt: now,
+      completedAt: status === "COMPLETED" ? now : null,
     },
   });
+}
+
+export async function completeLesson(lessonId: string) {
+  return setLessonStatus(lessonId, "COMPLETED");
 }

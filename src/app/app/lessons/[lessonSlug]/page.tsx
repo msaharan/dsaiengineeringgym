@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import Markdown from "@/components/content/Markdown";
 import LessonFlashcardReview from "@/components/flashcards/LessonFlashcardReview";
+import LessonStatusActions from "@/components/lessons/LessonStatusActions";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -105,9 +106,21 @@ export default async function LessonPage({ params }: LessonPageProps) {
               Lesson
             </p>
             {lessonStatus ? (
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                {lessonStatus === "COMPLETED" ? "Completed" : "In progress"}
-              </span>
+              lessonStatus === "COMPLETED" ? (
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                  Completed
+                </span>
+              ) : (
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  In progress
+                </span>
+              )
+            ) : null}
+            {userId ? (
+              <LessonStatusActions
+                lessonId={lesson.id}
+                status={lessonStatus}
+              />
             ) : null}
           </div>
           <h1 className="text-3xl font-semibold text-slate-900">
@@ -144,6 +157,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
           </p>
           <LessonFlashcardReview
             lessonId={lesson.id}
+            lessonStatus={lessonStatus}
             flashcards={lesson.flashcards}
           />
         </section>
