@@ -133,7 +133,10 @@ export default function ReviewSession({ queue }: ReviewSessionProps) {
       </div>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <ClientMarkdown content={showBack ? card.backMd : card.frontMd} />
+        <ClientMarkdown
+          content={showBack ? card.backMd : card.frontMd}
+          className="text-slate-700"
+        />
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">

@@ -75,7 +75,10 @@ export default function LessonFlashcardReview({
         <span>{showBack ? "Answer" : "Question"}</span>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <ClientMarkdown content={showBack ? card.backMd : card.frontMd} />
+        <ClientMarkdown
+          content={showBack ? card.backMd : card.frontMd}
+          className="text-slate-700"
+        />
       </div>
       <div className="flex flex-wrap gap-3">
         <button
